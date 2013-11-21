@@ -191,31 +191,31 @@ def search(query, tld='com', lang='en', num=10, start=0, stop=None, pause=2.0):
 
         # Request the Google Search results page.
         html = get_page(url)
-
         # Parse the response and process every anchored URL.
         soup = BeautifulSoup(html)
-        anchors = soup.find(id='search').findAll('a')
-        for a in anchors:
+        #for exact searches
+        if not soup.findAll("img", { "src" : "/images/yellow-alert2x.png" }):
+            anchors = soup.find(id='search').findAll('a')
+            for a in anchors:
+                # Get the URL from the anchor tag.
+                try:
+                    link = a['href']
+                except KeyError:
+                    continue
 
-            # Get the URL from the anchor tag.
-            try:
-                link = a['href']
-            except KeyError:
-                continue
+                # Filter invalid links and links pointing to Google itself.
+                link = filter_result(link)
+                if not link:
+                    continue
 
-            # Filter invalid links and links pointing to Google itself.
-            link = filter_result(link)
-            if not link:
-                continue
+                # Discard repeated results.
+                h = hash(link)
+                if h in hashes:
+                    continue
+                hashes.add(h)
 
-            # Discard repeated results.
-            h = hash(link)
-            if h in hashes:
-                continue
-            hashes.add(h)
-
-            # Yield the result.
-            yield link
+                # Yield the result.
+                yield link
 
         # End if there are no more results.
         if not soup.find(id='nav'):
@@ -273,3 +273,4 @@ if __name__ == "__main__":
     # Run the query.
     for url in search(query, **params):
         print(url)
+e
